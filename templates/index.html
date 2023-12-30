@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DataTables Pagination</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.0/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-colors-2021.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-colors-2020.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-colors-win8.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- --------------------------------- ADD ONS | start ----------------------------------------------- -->
+
+    <script src=""></script>
+    <link rel="stylesheet" href="">
+
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+    <!-- --------------------------------- ADD ONS | end ----------------------------------------------- -->
+
+
+    <link rel="stylesheet" href="">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+
+    <style>
+    .custom-font {
+        font-family: Roboto, Helvetica,sans-serif !important;
+    }
+
+    .my-body-margin {
+        margin-left: 5px;
+        margin-right: 5px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    .my-body-padding {
+        padding-left: 5px;
+        padding-right: 5px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    </style>
+
+    <style>
+    .loader {
+        border: 5px solid #f3f3f3; /* Light grey */
+        border-top: 5px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    #id_loader {
+        display: none;
+    }
+
+    #id_loader_2 {
+        display: none;
+    }
+    </style>
+
+    <script>
+        let object_table = {};
+        let object_table_2 = {};
+    </script>
+
+</head>
+
+<body class="custom-font my-body-margin my-body-padding">
+
+    <!-- ------------------------------------------------------------------------------------------- -->
+
+    <div id="id_table_content">
+
+        <input id="my_checkbox" name="my_checkbox" class="w3-check" checked="checked" type="checkbox">&nbsp;&nbsp;<label>Exact Search</label>
+        <br/>
+        <br/>
+
+        <table>
+            <tr>
+                <td>
+                    <button id="id_export_table_csv" class="w3-button w3-teal w3-round">Export Table (CSV)</button>
+                </td>
+
+                <td>
+                    <div class="w3-container">
+                        <div id="id_loader" class="loader"></div>
+                        <div id="id_result"></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <br/>
+
+        <table id="dataTable" class="display cell-border nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>random_num</th>
+                    <th>random_float</th>
+                    <th>md5</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- jQuery Data Table Body -->
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <th>random_num</th>
+                    <th>random_float</th>
+                    <th>md5</th>
+                </tr>
+            </tfoot>
+
+        </table>
+
+    </div> <!-- id_table_content -->
+
+    <!-- ------------------------------------------------------------------------------------------- -->
+
+    <div id="id_table_content_2">
+
+        <input id="my_checkbox_2" name="my_checkbox_2" class="w3-check" checked="checked" type="checkbox">&nbsp;&nbsp;<label>Exact Search</label>
+        <br/>
+        <br/>
+
+        <table>
+            <tr>
+                <td>
+                    <button id="id_export_table_csv_2" class="w3-button w3-teal w3-round">Export Table (CSV)</button>
+                </td>
+
+                <td>
+                    <div class="w3-container">
+                        <div id="id_loader_2" class="loader"></div>
+                        <div id="id_result_2"></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <br/>
+
+        <table id="dataTable_2" class="display cell-border nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>my_date</th>
+                    <th>my_data</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- jQuery Data Table Body -->
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <th>my_date</th>
+                    <th>my_data</th>
+                </tr>
+            </tfoot>
+
+        </table>
+
+    </div> <!-- id_table_content -->
+
+    <!-- ------------------------------------------------------------------------------------------- -->
+
+</body>
+</html>
+
+
+<script>
+window.addEventListener('DOMContentLoaded', (event) => {
+    render_table();
+    render_table_2();
+    handle_csv_export_1();
+    handle_csv_export_2();
+});
+</script>
+
+<script>
+function handle_csv_export_1() {
+    var export_table_csv = document.getElementById("id_export_table_csv");
+    var loader = document.getElementById("id_loader");
+
+    export_table_csv.onclick = function () {
+        loader.style.display = "block";
+
+        // returns the search string in the search box
+        var search_str = '';
+        var search_str_tmp1 = $("#id_table_content").find('input[type="search"]')[0].value;
+        var search_str_tmp2 = search_str_tmp1.trim();
+        if (search_str_tmp2 === '') {
+            search_str = '___'; // search all
+        } else {
+            search_str = search_str_tmp2;
+        }
+        console.log("--[search_str]--");
+        console.log(search_str);
+
+        // returns true or false
+        var exact_search = $("#my_checkbox").is(":checked");
+        console.log("--[exact_search]--");
+        console.log(exact_search);
+
+        var pattern_match = "";
+        if (exact_search === true) {
+            pattern_match = "exact";
+        } else {
+            pattern_match = "like";
+        }
+
+        console.log("--[pattern_match]--");
+        console.log(pattern_match);
+
+        var payload = JSON.stringify({
+            "table_name": "table1", // ---> make a note of this !!
+            "pattern_match": pattern_match,
+            "search_string": search_str
+        });
+
+        console.log("--[payload]--");
+        console.log(payload);
+
+        $.ajax({
+            type: "POST",
+            dataType: "JSON",
+            contentType: "application/json",
+            timeout: 10000,
+            data: payload,
+            url: window.location.origin + "/export_csv",
+            success: function (resp) {
+                console.log("success : " + resp);
+                loader.style.display = "none";
+                var csv_url = window.location.origin + '/' + resp["message"];
+                console.log(csv_url);
+
+                var result = '<a href="' + csv_url + '">' + csv_url + '</a>'
+                console.log(result);
+
+                $("#id_result").html(result);
+            },
+            error: function (resp) {
+                console.log("error : " + resp);
+                loader.style.display = "none";
+            }
+        });
+    };
+}
+</script>
+
+<script>
+function handle_csv_export_2() {
+    var export_table_csv = document.getElementById("id_export_table_csv_2");
+    var loader = document.getElementById("id_loader_2");
+
+    export_table_csv.onclick = function () {
+        loader.style.display = "block";
+
+        // returns the search string in the search box
+        var search_str = '';
+        var search_str_tmp1 = $("#id_table_content_2").find('input[type="search"]')[0].value;
+        var search_str_tmp2 = search_str_tmp1.trim();
+        if (search_str_tmp2 === '') {
+            search_str = '___'; // search all
+        } else {
+            search_str = search_str_tmp2;
+        }
+        console.log("--[search_str]--");
+        console.log(search_str);
+
+        // returns true or false
+        var exact_search = $("#my_checkbox_2").is(":checked");
+        console.log("--[exact_search]--");
+        console.log(exact_search);
+
+        var pattern_match = "";
+        if (exact_search === true) {
+            pattern_match = "exact";
+        } else {
+            pattern_match = "like";
+        }
+
+        console.log("--[pattern_match]--");
+        console.log(pattern_match);
+
+        var payload = JSON.stringify({
+            "table_name": "table2", // ---> make a note of this !!
+            "pattern_match": pattern_match,
+            "search_string": search_str
+        });
+
+        console.log("--[payload]--");
+        console.log(payload);
+
+        $.ajax({
+            type: "POST",
+            dataType: "JSON",
+            contentType: "application/json",
+            timeout: 10000,
+            data: payload,
+            url: window.location.origin + "/export_csv",
+            success: function (resp) {
+                console.log("success : " + resp);
+                loader.style.display = "none";
+                var csv_url = window.location.origin + '/' + resp["message"];
+                console.log(csv_url);
+
+                var result = '<a href="' + csv_url + '">' + csv_url + '</a>'
+                console.log(result);
+
+                $("#id_result_2").html(result);
+            },
+            error: function (resp) {
+                console.log("error : " + resp);
+                loader.style.display = "none";
+            }
+        });
+    };
+}
+</script>
+
+<script>
+function render_table() {
+    object_table = $('#dataTable').DataTable({
+        "lengthMenu": [10, 50, 100, 250, 500],
+        "pageLength": 10,
+        "processing": true,
+        "serverSide": true,
+        "deferRender": true,
+        "searching": true,
+        "scrollY": "400px",
+        "sScrollX": '100%',
+        // "dom": "Bfrtip",
+        "dom": "lfiprtip",
+        "ajax": {
+            "url": '/query',
+            "type" : "POST",
+            "data" : function(d) {
+                d.exactsearch = $("#my_checkbox").is(":checked");
+                d.tablename = "table1"; // ---> make a note of this !!
+            }
+        },
+        "drawCallback": function(oSettings, json){
+
+        },
+        "columns" : [
+            {"data": "random_num"},
+            {"data": "random_float"},
+            {"data": "md5"}
+        ],
+        "language" : {
+            "processing": '<div class="lds-dual-ring"></div>'
+        },
+        'columnDefs': [
+            {"targets": 0, "className": "dt-body-center"},
+            {"targets": 1, "className": "dt-body-center"},
+            {"targets": 2, "className": "dt-body-center"}
+        ]
+    }); // $('#dataTable').DataTable({
+
+
+    $("#id_table_content").find('input[type="search"]').css("text-align", "center");
+    $("#id_table_content").find('input[type="search"]').css("width", "700px");
+    $("#id_table_content").find('input[type="search"]').css("background-color", "#cdffb1");
+
+    $('#id_table_content').find('input[type="search"]').off();
+
+
+    $('#id_table_content').find('input[type="search"]').on('keyup', function(e) {
+        if(e.keyCode === 13) {
+
+            console.log("--[searching for this.value]--");
+            console.log(this.value);
+
+            var stringToSearch = this.value;
+
+            if(stringToSearch.includes("+") === true && stringToSearch.includes("|")) {
+                alert("Your Search Cannot Include BOTH '+' and '|' (OR) Search Characters.");
+                return false;
+            }
+            object_table.search( this.value ).draw();
+        }
+    });
+
+} // function render_table() {
+</script>
+
+<script>
+function render_table_2() {
+    object_table_2 = $('#dataTable_2').DataTable({
+        "lengthMenu": [10, 50, 100, 250, 500],
+        "pageLength": 10,
+        "processing": true,
+        "serverSide": true,
+        "deferRender": true,
+        "searching": true,
+        "scrollY": "400px",
+        "sScrollX": '100%',
+        // "dom": "Bfrtip",
+        "dom": "lfiprtip",
+        "ajax": {
+            "url": '/query',
+            "type" : "POST",
+            "data" : function(d) {
+                d.exactsearch = $("#my_checkbox_2").is(":checked");
+                d.tablename = "table2"; // ---> make a note of this !!
+            }
+        },
+        "drawCallback": function(oSettings, json){
+
+        },
+        "columns" : [
+            {"data": "my_date"},
+            {"data": "my_data"}
+        ],
+        "language" : {
+            "processing": '<div class="lds-dual-ring"></div>'
+        },
+        'columnDefs': [
+            {"targets": 0, "className": "dt-body-center"},
+            {"targets": 1, "className": "dt-body-center"}
+        ]
+    }); // $('#dataTable_2').DataTable({
+
+
+    $("#id_table_content_2").find('input[type="search"]').css("text-align", "center");
+    $("#id_table_content_2").find('input[type="search"]').css("width", "700px");
+    $("#id_table_content_2").find('input[type="search"]').css("background-color", "#cdffb1");
+
+    $('#id_table_content_2').find('input[type="search"]').off();
+
+
+    $('#id_table_content_2').find('input[type="search"]').on('keyup', function(e) {
+        if(e.keyCode === 13) {
+
+            console.log("--[searching for this.value]--");
+            console.log(this.value);
+
+            var stringToSearch = this.value;
+
+            if(stringToSearch.includes("+") === true && stringToSearch.includes("|")) {
+                alert("Your Search Cannot Include BOTH '+' and '|' (OR) Search Characters.");
+                return false;
+            }
+            object_table_2.search( this.value ).draw();
+        }
+    });
+
+} // function render_table_2() {
+</script>
