@@ -1,6 +1,5 @@
 // main.rs
 
-use std::arch::aarch64::int8x8_t;
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
@@ -38,17 +37,17 @@ use std::error::Error as StdError;
 use serde_json::Error as SerdeError;
 use serde_json::error::Category;
 use sqlx::Value;
-use crate::data_types::{CustomError, CustomErrorType, Data1, Data2, ExportData};
-use crate::data_types::{FormData, GenericError, JsonResponse, SearchStringData};
-use crate::db_ops::{export_table_to_csv, get_backend_table, get_backend_table_columns};
-use crate::db_ops::{get_count, get_db_pool_for_table, get_inner_query, get_table_column_mapping};
-use crate::string_ops::{remove_leading_and_trailing_spaces, sanitize_string, split_string};
+use std::path::Path;
 
 mod string_ops;
 mod db_ops;
 mod data_types;
 
-
+use crate::data_types::{CustomError, CustomErrorType, Data1, Data2, ExportData};
+use crate::data_types::{FormData, GenericError, JsonResponse, SearchStringData};
+use crate::db_ops::{export_table_to_csv, get_backend_table, get_backend_table_columns};
+use crate::db_ops::{get_count, get_db_pool_for_table, get_inner_query, get_table_column_mapping};
+use crate::string_ops::{remove_leading_and_trailing_spaces, sanitize_string, split_string};
 
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
@@ -311,15 +310,23 @@ async fn index(tera: web::Data<Tera>) -> impl Responder {
     context.insert("title", "Data Table");
     context.insert("message", "PS Table");
 
-    let rendered = tera.render("index.html", &context).unwrap();
+    let mut rendered = "".to_string();
+
+    rendered = tera.render("index.html", &context).unwrap();
+
     HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    dotenv().ok();
-    dotenv::from_filename("app.rust.env").ok();
+    let path = Path::new("/etc/app.rust.env");
+    if path.exists() {
+        dotenv::from_filename("/etc/app.rust.env").ok();
+    } else {
+        dotenv().ok();
+        dotenv::from_filename("app.rust.env").ok();
+    }
 
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();

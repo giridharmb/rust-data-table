@@ -1,4 +1,6 @@
-#### Rust & jQuery Data Tables
+# Rust & jQuery Data Tables
+
+### Part-1
 
 > PostgreSQL Setup
 
@@ -136,4 +138,101 @@ Access The Web UI (jQuery Data Table)
 
 ```bash
 http://127.0.0.1:5050/tables
+```
+
+### Part-2
+
+#### Deploy The Binary As A Service On Remote Node
+
+- In this case, my remote-node is `my-server.company.com`
+- Remote-node `my-server.company.com` runs the Rust Binary
+- Remote-node is running `Linux`
+- FYI : I'm creating the rust-binary on a different `Linux` host
+  - If I create the binary on `Mac-OSX`, it will not run on `Linux`
+  - Hence create the binary on `Linux`
+  - Then run ansible playbook to deploy the binary as a service
+- Create the rust binary using `cargo build --release`
+- `cargo build --release` will compile & generate `target/release/rust-datatable` binary
+- Make sure you are able to `SSH` as `root` user (`ssh root@my-server.company.com`)
+
+#### Ansible Deployment Setup
+
+Create `hosts.ini`
+
+```ini
+[rust_app_hosts]
+my-server.company.com
+```
+
+Create Service Template `rdatatable.service.j2`
+
+```ini
+[Unit]
+Description=RustBinary-DataTables
+
+[Service]
+ExecStart=/usr/local/bin/rust-datatable
+Restart=always
+User=root
+Group=root
+Environment=VERSION=1.0
+WorkingDirectory=/usr/local/bin
+RestartSec=3
+StartLimitInterval=60s
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Generate Rust Binary (It will create the file `target/release/rust-datatable`)
+
+```bash
+cargo build --release
+```
+
+Ansible Playbook `deploy.yml`
+
+```yaml
+---
+- hosts: rust_app_hosts
+  become: yes
+  tasks:
+    - name: copy the binary file
+      copy:
+        src: target/release/rust-datatable
+        dest: /usr/local/bin/rust-datatable
+        owner: root
+        mode: '0755'
+
+    - name: copy the env-config file
+      copy:
+        src: app.rust.env
+        dest: /etc/app.rust.env
+        owner: root
+        mode: '0644'
+
+    - synchronize:
+        src: templates
+        dest: /usr/local/bin/
+
+    - name: copy service template
+      template:
+        src: rdatatable.service.j2
+        dest: /etc/systemd/system/rdatatable.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: enabled and start the service
+      service:
+        name: rdatatable
+        enabled: yes
+        state: restarted
+```
+
+Deploy the RUST Binary As A Service
+
+```bash
+ansible-playbook -v -i hosts.ini deploy.yml -u root
 ```
