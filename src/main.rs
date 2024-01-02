@@ -45,7 +45,7 @@ mod data_types;
 
 use crate::data_types::{CustomError, CustomErrorType, Data1, Data2, ExportData};
 use crate::data_types::{FormData, GenericError, JsonResponse, SearchStringData};
-use crate::db_ops::{export_table_to_csv, get_backend_table, get_backend_table_columns};
+use crate::db_ops::{export_table_to_csv, get_backend_table, get_backend_table_columns, get_count_of_records};
 use crate::db_ops::{get_count, get_db_pool_for_table, get_inner_query, get_table_column_mapping};
 use crate::string_ops::{remove_leading_and_trailing_spaces, sanitize_string, split_string};
 
@@ -204,9 +204,12 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
 
     let mut inner_query = "".to_string();
 
+    let mut total_count_query = "".to_string();
+
     if search_string_for_reference.is_empty() {
         default_query = format!("SELECT * FROM {} ORDER BY {} {} LIMIT {} OFFSET {}", actual_db_table, column_name_to_sort, sort_column_order, length, start);
         println!("default_query (1) : [ {} ]", default_query.to_string());
+        total_count_query = format!("SELECT count(*) FROM {}", actual_db_table);
     } else {
         println!("table_columns : {:#?} , sanitized_search_strings : {:#?} , pattern_match : {} , search_type : {}", table_columns, sanitized_search_strings, pattern_match, search_type);
         inner_query = get_inner_query(table_columns, sanitized_search_strings, pattern_match, search_type).await.unwrap();
@@ -214,6 +217,7 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
 
         default_query = format!("SELECT * FROM {} WHERE {} ORDER BY {} {} LIMIT {} OFFSET {}", actual_db_table, inner_query, column_name_to_sort, sort_column_order, length, start);
         println!("default_query (2) : {}", default_query.to_string());
+        total_count_query = format!("SELECT count(*) FROM {} WHERE {}", actual_db_table, inner_query);
     }
 
     let my_db_pool = get_db_pool_for_table(table_short_name.as_str()).await.unwrap();
@@ -269,7 +273,7 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
         },
     };
 
-    let records_total = get_count(actual_db_table.as_str(), my_db_pool).await.unwrap();
+    let records_total = get_count_of_records(total_count_query, my_db_pool).await.unwrap();
     println!("records_total : {}", records_total);
     let records_filtered = records_total;
 

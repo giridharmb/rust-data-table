@@ -52,6 +52,15 @@ pub async fn get_count(table_name: &str, pool: Pool) -> Result<i64, Error> {
     Ok(row.get(0))
 }
 
+pub async fn get_count_of_records(total_count_query: String, pool: Pool) -> Result<i64, Error> {
+    let conn = pool.get().await.unwrap();
+    let sql_query = total_count_query.to_string();
+    let stmt = conn.prepare(sql_query.as_str()).await.unwrap();
+    let row = conn.query_one(&stmt, &[]).await.unwrap();
+    Ok(row.get(0))
+}
+
+
 pub async fn get_db_pool_for_table(source_table: &str) -> Result<Pool,CustomError> {
     println!("source_table : {}", source_table.to_string());
     return match source_table {
