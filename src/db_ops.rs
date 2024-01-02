@@ -149,12 +149,14 @@ pub async fn export_table_to_csv(pool: Pool, table_name: &str, table_columns: Ve
     let backend_table = get_backend_table(table_name).await;
     println!("backend_table : {}", backend_table);
 
+    let table_columns_separated_by_commas = table_columns.join(",");
+
     // '___' is sent from the UI : which tells the backend to export all the rows of the table
     if search_strings.len() == 1 && search_strings.get(0).unwrap().to_string() == "___".to_string() {
-        main_query = format!("SELECT * FROM {}", backend_table);
+        main_query = format!("SELECT {} FROM {}", table_columns_separated_by_commas, backend_table);
     } else {
         let inner_query = get_inner_query(table_columns, search_strings, pattern_match, search_type).await.unwrap();
-        main_query = format!("SELECT * FROM {} WHERE {}", backend_table, inner_query);
+        main_query = format!("SELECT {} FROM {} WHERE {}", table_columns_separated_by_commas, backend_table, inner_query);
     }
 
     println!("main_query : |{}|", main_query);
