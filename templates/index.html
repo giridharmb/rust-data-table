@@ -74,7 +74,7 @@
         100% { transform: rotate(360deg); }
     }
 
-    #id_loader {
+    #id_loader_1 {
         display: none;
     }
 
@@ -83,123 +83,130 @@
     }
     </style>
 
-    <script>
-        let object_table = {};
-        let object_table_2 = {};
-    </script>
-
 </head>
 
 <body class="custom-font my-body-margin my-body-padding">
 
     <!-- ------------------------------------------------------------------------------------------- -->
 
-    <div id="id_table_content">
+    <div id="id_table_content_1">
 
-        <input id="my_checkbox" name="my_checkbox" class="w3-check" checked="checked" type="checkbox">&nbsp;&nbsp;<label>Exact Search</label>
-        <br/>
-        <br/>
-
-        <table>
-            <tr>
-                <td>
-                    <button id="id_export_table_csv" class="w3-button w3-teal w3-round">Export Table (CSV)</button>
-                </td>
-
-                <td>
-                    <div class="w3-container">
-                        <div id="id_loader" class="loader"></div>
-                        <div id="id_result"></div>
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <br/>
-
-        <table id="dataTable" class="display cell-border nowrap" style="width:100%">
-            <thead>
-                <tr>
-                    <th>random_num</th>
-                    <th>random_float</th>
-                    <th>md5</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- jQuery Data Table Body -->
-            </tbody>
-
-            <tfoot>
-                <tr>
-                    <th>random_num</th>
-                    <th>random_float</th>
-                    <th>md5</th>
-                </tr>
-            </tfoot>
-
-        </table>
-
-    </div> <!-- id_table_content -->
+    </div>
+    <br/>
 
     <!-- ------------------------------------------------------------------------------------------- -->
 
     <div id="id_table_content_2">
 
-        <input id="my_checkbox_2" name="my_checkbox_2" class="w3-check" checked="checked" type="checkbox">&nbsp;&nbsp;<label>Exact Search</label>
-        <br/>
-        <br/>
-
-        <table>
-            <tr>
-                <td>
-                    <button id="id_export_table_csv_2" class="w3-button w3-teal w3-round">Export Table (CSV)</button>
-                </td>
-
-                <td>
-                    <div class="w3-container">
-                        <div id="id_loader_2" class="loader"></div>
-                        <div id="id_result_2"></div>
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <br/>
-
-        <table id="dataTable_2" class="display cell-border nowrap" style="width:100%">
-            <thead>
-                <tr>
-                    <th>my_date</th>
-                    <th>my_data</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- jQuery Data Table Body -->
-            </tbody>
-
-            <tfoot>
-                <tr>
-                    <th>my_date</th>
-                    <th>my_data</th>
-                </tr>
-            </tfoot>
-
-        </table>
-
-    </div> <!-- id_table_content -->
+    </div>
+    <br/>
 
     <!-- ------------------------------------------------------------------------------------------- -->
 
+    <script>
+    function render_html_data_table_content(id_parent_div, header_name, header_color, id_checkbox, id_btn_export_csv, id_loader, id_result, id_dataTable, column_names) {
+        var html_content = '';
+        var i = 0;
+
+        html_content = html_content + '<div class="w3-container ' + header_color + ' w3-center w3-round w3-border"><h3>' + header_name + '</h3></div>';
+        html_content = html_content + '<div class="w3-container w3-right"> <input id="' + id_checkbox + '" name="' + id_checkbox + '" class="w3-check" checked="checked" type="checkbox">&nbsp;&nbsp;<label>Exact Search ( <b><u>Deselect</u></b> For Pattern Matching Based Search Across All Columns )</label></div> <br/><br/>';
+
+        html_content = html_content + '<table>';
+        html_content = html_content + '<tr>';
+        html_content = html_content + '<td><button id="' + id_btn_export_csv + '" class="w3-button w3-black w3-round">Export Table (CSV)</button></td>';
+        html_content = html_content + '<td>';
+        html_content = html_content + '<div class="w3-container">';
+        html_content = html_content + '<div id="' + id_loader + '" class="loader"></div>';
+        html_content = html_content + '<div id="' + id_result + '"></div>';
+        html_content = html_content + '</div>';
+        html_content = html_content + '</td>';
+        html_content = html_content + '</tr>';
+        html_content = html_content + '</table>';
+
+        html_content = html_content + '<br/>';
+
+        html_content = html_content + '';
+
+        html_content = html_content + '<table id="' + id_dataTable + '" class="display cell-border nowrap" style="width:100%">';
+
+        html_content = html_content + '<thead>';
+        html_content = html_content + '<tr>';
+        for (i=0; i<column_names.length; i++) {
+            html_content = html_content + '<th>' +  column_names[i] + '</th>';
+        }
+        html_content = html_content + '</tr>';
+        html_content = html_content + '</thead>';
+
+        html_content = html_content + '<tfoot>';
+        html_content = html_content + '<tr>';
+        for (i=0; i<column_names.length; i++) {
+            html_content = html_content + '<th>' +  column_names[i] + '</th>';
+        }
+        html_content = html_content + '</tr>';
+        html_content = html_content + '</tfoot>';
+
+        html_content = html_content + '</table>';
+        html_content = html_content + '<hr/>';
+
+        $("#" + id_parent_div).html(html_content);
+    }
+
+    render_html_data_table_content(
+        "id_table_content_1",
+        "Random-Data-1",
+        "w3-blue",
+        "my_checkbox_1",
+        "id_export_table_csv_1",
+        "id_loader_1",
+        "id_result_1",
+        "dataTable_1",
+        ["random_num", "random_float", "md5"]
+    );
+
+    render_html_data_table_content(
+        "id_table_content_2",
+        "Random-Data-2",
+        "w3-blue",
+        "my_checkbox_2",
+        "id_export_table_csv_2",
+        "id_loader_2",
+        "id_result_2",
+        "dataTable_2",
+        ["my_date", "my_data"]
+    );
+    </script>
 </body>
 </html>
 
 
 <script>
 window.addEventListener('DOMContentLoaded', (event) => {
-    render_ssr_jquery_datatable("dataTable", "my_checkbox", "table1", ["random_num", "random_float", "md5"], "id_table_content");
-    render_ssr_jquery_datatable("dataTable_2", "my_checkbox_2", "table2", ["my_date", "my_data"], "id_table_content_2");
+    render_ssr_jquery_datatable(
+        "dataTable_1",
+        "my_checkbox_1",
+        "table1",
+        [
+            "random_num",
+            "random_float",
+            "md5"
+        ],
+        "id_table_content_1",
+        []
+    );
 
-    handle_csv_export("id_export_table_csv", "id_loader", "id_table_content", "my_checkbox", "table1", "id_result");
+    render_ssr_jquery_datatable(
+        "dataTable_2",
+        "my_checkbox_2",
+        "table2",
+        [
+            "my_date",
+            "my_data"
+        ],
+        "id_table_content_2",
+        []
+    );
+
+    handle_csv_export("id_export_table_csv_1", "id_loader_1", "id_table_content_1", "my_checkbox_1", "table1", "id_result_1");
     handle_csv_export("id_export_table_csv_2", "id_loader_2", "id_table_content_2", "my_checkbox_2", "table2", "id_result_2");
 });
 </script>
@@ -252,7 +259,7 @@ function handle_csv_export(id_button_export, id_loader, id_table_content, id_che
             type: "POST",
             dataType: "JSON",
             contentType: "application/json",
-            timeout: 10000,
+            timeout: 60000,
             data: payload,
             url: window.location.origin + "/export_csv",
             success: function (resp) {
@@ -261,7 +268,12 @@ function handle_csv_export(id_button_export, id_loader, id_table_content, id_che
                 var csv_url = window.location.origin + '/' + resp["message"];
                 console.log(csv_url);
 
-                var result = '<a href="' + csv_url + '">' + csv_url + '</a>'
+                var status_code = resp["status"];
+                var total_rows = resp["rows"];
+                var time_taken_for_export = resp["time_taken_for_export"];
+
+                var result = '<a href="' + csv_url + '">' + csv_url + '</a>&nbsp;&nbsp;&nbsp; Status Code ('+status_code+') , Time Taken To Export (<b>'+total_rows+'</b>) Rows => (<b>' + time_taken_for_export + '</b>) seconds';
+
                 console.log(result);
 
                 $("#"+id_result).html(result);
@@ -296,7 +308,7 @@ function get_column_defs(total_column_length) {
     return column_defs;
 }
 
-function render_ssr_jquery_datatable(id_data_table, id_checkbox, table_name, column_names, id_table_content) {
+function render_ssr_jquery_datatable(id_data_table, id_checkbox, table_name, column_names, id_table_content, column_indexes_which_are_int) {
     var data_table_object = {};
     var my_columns = get_columns(column_names);
     var my_column_defs = get_column_defs(column_names.length);
@@ -333,7 +345,7 @@ function render_ssr_jquery_datatable(id_data_table, id_checkbox, table_name, col
 
     $("#"+id_table_content).find('input[type="search"]').css("text-align", "center");
     $("#"+id_table_content).find('input[type="search"]').css("width", "700px");
-    $("#"+id_table_content).find('input[type="search"]').css("background-color", "#cdffb1");
+    $("#"+id_table_content).find('input[type="search"]').css("background-color", "#eaf9ff");
 
     $('#'+id_table_content).find('input[type="search"]').off();
 

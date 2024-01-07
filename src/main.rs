@@ -43,7 +43,7 @@ mod string_ops;
 mod db_ops;
 mod data_types;
 
-use crate::data_types::{CustomError, CustomErrorType, Data1, Data2, ExportData};
+use crate::data_types::{CustomError, CustomErrorType, Data1, Data2, ExportData, JsonResponseWithCSVExportData};
 use crate::data_types::{FormData, GenericError, JsonResponse, SearchStringData};
 use crate::db_ops::{export_table_to_csv, get_backend_table, get_backend_table_columns, get_count_of_records};
 use crate::db_ops::{get_count, get_db_pool_for_table, get_inner_query, get_table_column_mapping};
@@ -487,17 +487,21 @@ async fn handle_post(item: web::Json<ExportData>) -> impl Responder {
 
     let result = match export_table_to_csv(my_db_pool, my_table, columns, search_strings, item.pattern_match.to_string(), search_type).await {
         Ok(d) => {
-            let response_data = JsonResponse {
-                message: d.to_string(),
+            let response_data = JsonResponseWithCSVExportData {
+                message: d.csv_file_path,
                 status: 200,
+                rows: d.rows,
+                time_taken_for_export: d.time_taken_for_export,
             };
             web::Json(response_data)
         },
         Err(e) => {
             println!("error : could not export CSV file : {:#?}", e);
-            let response_data = JsonResponse {
+            let response_data = JsonResponseWithCSVExportData {
                 message: "error : could not export CSV file".to_string(),
                 status: 400,
+                rows: 0,
+                time_taken_for_export: 0.0,
             };
             web::Json(response_data)
         },

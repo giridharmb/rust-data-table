@@ -3,9 +3,10 @@ use std::env;
 use deadpool_postgres::{Config, Pool};
 use dotenv::dotenv;
 use tokio_postgres::{NoTls, Error, Row};
-use crate::data_types::CustomError;
+use crate::data_types::{CustomError, ExportResults};
 use csv::Writer;
 use std::fs::File;
+use std::time::Instant;
 use uuid::Uuid;
 
 pub async fn make_db_pool() -> Pool {
@@ -21,26 +22,35 @@ pub async fn make_db_pool() -> Pool {
     pool
 }
 
-pub async fn get_table_columns(table_name: &str) -> Vec<String> {
-    return match table_name {
-        "table1" => {
-            let mut cols = vec![];
-            cols.push("random_num".to_string());
-            cols.push("random_float".to_string());
-            cols.push("md5".to_string());
-            cols
-        },
-        "table2" => {
-            let mut cols = vec![];
-            cols.push("my_date".to_string());
-            cols.push("my_data".to_string());
-            cols
-        },
-        _ => {
-            let mut cols = vec![];
-            cols
-        }
-    };
+// pub async fn get_table_columns(table_name: &str) -> Vec<String> {
+//     return match table_name {
+//         "table1" => {
+//             let mut cols = vec![];
+//             cols.push("random_num".to_string());
+//             cols.push("random_float".to_string());
+//             cols.push("md5".to_string());
+//             cols
+//         },
+//         "table2" => {
+//             let mut cols = vec![];
+//             cols.push("my_date".to_string());
+//             cols.push("my_data".to_string());
+//             cols
+//         },
+//         _ => {
+//             let mut cols = vec![];
+//             cols
+//         }
+//     };
+// }
+
+pub async fn get_table_columns(table_short_name: &str) -> Vec<String> {
+    let mut cols = vec![];
+    let mapping = get_table_column_mapping(table_short_name).await;
+    for(_, column_name) in &mapping {
+        cols.push(column_name.to_string());
+    }
+    cols
 }
 
 
@@ -91,56 +101,99 @@ pub async fn get_backend_table(table_short_name: &str) -> String {
     };
 }
 
-pub async fn get_backend_table_columns(table_short_name: &str) -> Vec<String> {
+async fn get_cols_for_table(table_short_name: &str) -> Vec<String> {
+    let mut cols_vec = vec![];
     return match table_short_name {
         "table1" => {
-            let mut cols = vec![];
-            cols.push("random_num".to_string());
-            cols.push("random_float".to_string());
-            cols.push("md5".to_string());
-            cols
+            cols_vec.push("random_num".to_string());
+            cols_vec.push("random_float".to_string());
+            cols_vec.push("md5".to_string());
+            cols_vec
         },
         "table2" => {
-            let mut cols = vec![];
-            cols.push("my_date".to_string());
-            cols.push("my_data".to_string());
-            cols
-        }
-        _ => {
-            let mut cols = vec![];
-            cols.push("random_num".to_string());
-            cols.push("random_float".to_string());
-            cols.push("md5".to_string());
-            cols
-        }
-    };
-}
-
-pub async fn get_table_column_mapping(table_short_name: &str) -> HashMap<String, String> {
-    let mut map: HashMap<String, String> = HashMap::new();
-    return match table_short_name {
-        "table1" => {
-            map.insert("0".to_string(), "random_num".to_string());
-            map.insert("1".to_string(), "random_float".to_string());
-            map.insert("2".to_string(), "md5".to_string());
-            map
-        },
-        "table2" => {
-            map.insert("0".to_string(), "my_date".to_string());
-            map.insert("1".to_string(), "my_data".to_string());
-            map
+            cols_vec.push("my_date".to_string());
+            cols_vec.push("my_data".to_string());
+            cols_vec
         },
         _ => {
-            // default
-            map.insert("0".to_string(), "random_num".to_string());
-            map.insert("1".to_string(), "random_float".to_string());
-            map.insert("2".to_string(), "md5".to_string());
-            map
-        },
+            cols_vec.push("random_num".to_string());
+            cols_vec.push("random_float".to_string());
+            cols_vec.push("md5".to_string());
+            cols_vec
+        }
     }
 }
 
-pub async fn export_table_to_csv(pool: Pool, table_name: &str, table_columns: Vec<String>, search_strings: Vec<String>, pattern_match: String, search_type: String) -> Result<String, Error> {
+
+// pub async fn get_backend_table_columns(table_short_name: &str) -> Vec<String> {
+//     return match table_short_name {
+//         "table1" => {
+//             let mut cols = vec![];
+//             cols.push("random_num".to_string());
+//             cols.push("random_float".to_string());
+//             cols.push("md5".to_string());
+//             cols
+//         },
+//         "table2" => {
+//             let mut cols = vec![];
+//             cols.push("my_date".to_string());
+//             cols.push("my_data".to_string());
+//             cols
+//         }
+//         _ => {
+//             let mut cols = vec![];
+//             cols.push("random_num".to_string());
+//             cols.push("random_float".to_string());
+//             cols.push("md5".to_string());
+//             cols
+//         }
+//     };
+// }
+
+pub async fn get_table_column_mapping(table_short_name: &str) -> HashMap<String, String> {
+    let mut map: HashMap<String, String> = HashMap::new();
+    let cols_vec = get_cols_for_table(table_short_name).await;
+    for (index, value) in cols_vec.iter().enumerate() {
+        map.insert(index.to_string(), value.to_string());
+    }
+    map
+}
+
+pub async fn get_backend_table_columns(table_short_name: &str) -> Vec<String> {
+    let mut cols = vec![];
+    let mapping = get_table_column_mapping(table_short_name).await;
+    for(_, column_name) in &mapping {
+        cols.push(column_name.to_string());
+    }
+    cols
+}
+
+// pub async fn get_table_column_mapping(table_short_name: &str) -> HashMap<String, String> {
+//     let mut map: HashMap<String, String> = HashMap::new();
+//     return match table_short_name {
+//         "table1" => {
+//             map.insert("0".to_string(), "random_num".to_string());
+//             map.insert("1".to_string(), "random_float".to_string());
+//             map.insert("2".to_string(), "md5".to_string());
+//             map
+//         },
+//         "table2" => {
+//             map.insert("0".to_string(), "my_date".to_string());
+//             map.insert("1".to_string(), "my_data".to_string());
+//             map
+//         },
+//         _ => {
+//             // default
+//             map.insert("0".to_string(), "random_num".to_string());
+//             map.insert("1".to_string(), "random_float".to_string());
+//             map.insert("2".to_string(), "md5".to_string());
+//             map
+//         },
+//     }
+// }
+
+pub async fn export_table_to_csv(pool: Pool, table_name: &str, table_columns: Vec<String>, search_strings: Vec<String>, pattern_match: String, search_type: String) -> Result<ExportResults, Error> {
+    let start = Instant::now();
     // Get a connection from the pool
     let mut client = pool.get().await.unwrap();
 
@@ -184,7 +237,17 @@ pub async fn export_table_to_csv(pool: Pool, table_name: &str, table_columns: Ve
 
     println!("CSV File Written : {}", complete_file_path.clone().to_string());
 
-    Ok(complete_file_path)
+    let total_rows = rows.len() as i32;
+
+    let duration = start.elapsed().as_secs_f64();
+
+    let csv_export_results = ExportResults {
+        csv_file_path: complete_file_path,
+        rows: total_rows,
+        time_taken_for_export: duration,
+    };
+
+    Ok(csv_export_results)
 }
 
 /* ************************************************************************************* */
@@ -334,27 +397,59 @@ async fn write_csv_data(table_name: &str, rows: &Vec<Row>, mut wtr: Writer<File>
         "table1" => {
             // Iterate over the rows and write to the CSV
             for row in rows {
-                let random_num: i32 = row.get("random_num");
-                let random_float: f64 = row.get("random_float");
-                let md5: String = row.get("md5");
-                wtr.write_record(&[random_num.to_string(), random_float.to_string(), md5.to_string()]).unwrap();
+
+                // Note >>
+                // Here we are using Option<i32> or Option<String>
+                // Because row.get("column_name") -> can return (a valid value) or a (NULL)
+                // We need to handle both cases
+
+                let random_num_option: Option<i32> = row.get("random_num");
+                let random_num = random_num_option.unwrap_or_else(|| 0);
+
+                let random_float_option: Option<f64> = row.get("random_float");
+                let random_float = random_float_option.unwrap_or_else(|| 0.0);
+
+                let md5_option: Option<String> = row.get("md5");
+                let md5 = md5_option.unwrap_or_else(|| "missing_md5".to_string());
+
+                wtr.write_record(&[
+                    random_num.to_string(),
+                    random_float.to_string(),
+                    md5.to_string()
+                ]).unwrap();
             }
         },
         "table2" => {
             // Iterate over the rows and write to the CSV
             for row in rows {
-                let my_date: String = row.get("my_date");
-                let my_data: String = row.get("my_data");
-                wtr.write_record(&[my_date.to_string(), my_data.to_string()]).unwrap();
+                let my_date_option: Option<String> = row.get("my_date");
+                let my_date = my_date_option.unwrap_or_else(|| "missing_my_date".to_string());
+
+                let my_data_option: Option<String> = row.get("my_data");
+                let my_data = my_data_option.unwrap_or_else(|| "missing_my_data".to_string());
+
+                wtr.write_record(&[
+                    my_date.to_string(),
+                    my_data.to_string()
+                ]).unwrap();
             }
         },
         _ => {
             // default
             for row in rows {
-                let random_num: i32 = row.get("random_num");
-                let random_float: f64 = row.get("random_float");
-                let md5: String = row.get("md5");
-                wtr.write_record(&[random_num.to_string(), random_float.to_string(), md5.to_string()]).unwrap();
+                let random_num_option: Option<i32> = row.get("random_num");
+                let random_num = random_num_option.unwrap_or_else(|| 0);
+
+                let random_float_option: Option<f64> = row.get("random_float");
+                let random_float = random_float_option.unwrap_or_else(|| 0.0);
+
+                let md5_option: Option<String> = row.get("md5");
+                let md5 = md5_option.unwrap_or_else(|| "missing_md5".to_string());
+                wtr.write_record(&[
+                    random_num.to_string(),
+                    random_float.to_string(),
+                    md5.to_string()
+                ]).unwrap();
             }
         }
     };

@@ -87,6 +87,22 @@ pub struct JsonResponse {
     pub status: u32,
 }
 
+#[derive(Serialize)]
+pub struct JsonResponseWithCSVExportData {
+    pub message: String,
+    pub status: u32,
+    pub rows: i32,
+    pub time_taken_for_export: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExportResults {
+    pub csv_file_path: String,
+    pub rows: i32,
+    pub time_taken_for_export: f64,
+}
+
+
 
 #[derive(Display, From, Debug)]
 pub enum CustomError {
