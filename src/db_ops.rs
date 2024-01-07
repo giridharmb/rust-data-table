@@ -22,28 +22,6 @@ pub async fn make_db_pool() -> Pool {
     pool
 }
 
-// pub async fn get_table_columns(table_name: &str) -> Vec<String> {
-//     return match table_name {
-//         "table1" => {
-//             let mut cols = vec![];
-//             cols.push("random_num".to_string());
-//             cols.push("random_float".to_string());
-//             cols.push("md5".to_string());
-//             cols
-//         },
-//         "table2" => {
-//             let mut cols = vec![];
-//             cols.push("my_date".to_string());
-//             cols.push("my_data".to_string());
-//             cols
-//         },
-//         _ => {
-//             let mut cols = vec![];
-//             cols
-//         }
-//     };
-// }
-
 pub async fn get_table_columns(table_short_name: &str) -> Vec<String> {
     let mut cols = vec![];
     let mapping = get_table_column_mapping(table_short_name).await;
@@ -124,32 +102,6 @@ async fn get_cols_for_table(table_short_name: &str) -> Vec<String> {
     }
 }
 
-
-// pub async fn get_backend_table_columns(table_short_name: &str) -> Vec<String> {
-//     return match table_short_name {
-//         "table1" => {
-//             let mut cols = vec![];
-//             cols.push("random_num".to_string());
-//             cols.push("random_float".to_string());
-//             cols.push("md5".to_string());
-//             cols
-//         },
-//         "table2" => {
-//             let mut cols = vec![];
-//             cols.push("my_date".to_string());
-//             cols.push("my_data".to_string());
-//             cols
-//         }
-//         _ => {
-//             let mut cols = vec![];
-//             cols.push("random_num".to_string());
-//             cols.push("random_float".to_string());
-//             cols.push("md5".to_string());
-//             cols
-//         }
-//     };
-// }
-
 pub async fn get_table_column_mapping(table_short_name: &str) -> HashMap<String, String> {
     let mut map: HashMap<String, String> = HashMap::new();
     let cols_vec = get_cols_for_table(table_short_name).await;
@@ -167,30 +119,6 @@ pub async fn get_backend_table_columns(table_short_name: &str) -> Vec<String> {
     }
     cols
 }
-
-// pub async fn get_table_column_mapping(table_short_name: &str) -> HashMap<String, String> {
-//     let mut map: HashMap<String, String> = HashMap::new();
-//     return match table_short_name {
-//         "table1" => {
-//             map.insert("0".to_string(), "random_num".to_string());
-//             map.insert("1".to_string(), "random_float".to_string());
-//             map.insert("2".to_string(), "md5".to_string());
-//             map
-//         },
-//         "table2" => {
-//             map.insert("0".to_string(), "my_date".to_string());
-//             map.insert("1".to_string(), "my_data".to_string());
-//             map
-//         },
-//         _ => {
-//             // default
-//             map.insert("0".to_string(), "random_num".to_string());
-//             map.insert("1".to_string(), "random_float".to_string());
-//             map.insert("2".to_string(), "md5".to_string());
-//             map
-//         },
-//     }
-// }
 
 pub async fn export_table_to_csv(pool: Pool, table_name: &str, table_columns: Vec<String>, search_strings: Vec<String>, pattern_match: String, search_type: String) -> Result<ExportResults, Error> {
     let start = Instant::now();
