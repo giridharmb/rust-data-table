@@ -3,7 +3,7 @@ use std::env;
 use deadpool_postgres::{Config, Pool};
 use dotenv::dotenv;
 use tokio_postgres::{NoTls, Error, Row};
-use crate::data_types::{CustomError, ExportResults};
+use crate::data_types::{CustomError, Data1, Data2, ExportResults};
 use csv::Writer;
 use std::fs::File;
 use std::time::Instant;
@@ -386,4 +386,55 @@ async fn write_csv_data(table_name: &str, rows: &Vec<Row>, mut wtr: Writer<File>
     wtr.flush().unwrap();
 }
 
+/* ************************************************************************************* */
+pub async fn get_row_data_table_1(row: Row) -> Data1 {
+    let random_num_option: Option<i32> = row.get("random_num");
+    let random_num = random_num_option.unwrap_or_else(|| 0);
 
+    let random_float_option: Option<f64> = row.get("random_float");
+    let random_float = random_float_option.unwrap_or_else(|| 0.0);
+
+    let md5_option: Option<String> = row.get("md5");
+    let md5 = md5_option.unwrap_or_else(|| "missing_md5".to_string());
+
+    let my_struct = Data1 {
+        random_num,
+        random_float,
+        md5,
+    };
+    my_struct
+}
+
+pub async fn get_data_for_all_rows_for_table_1(rows: Vec<Row>) -> Vec<Data1> {
+    let mut structs:Vec<Data1> = Vec::new();
+    for row in rows {
+        let my_data = get_row_data_table_1(row).await;
+        structs.push(my_data);
+    }
+    structs
+}
+
+pub async fn get_row_data_table_2(row: Row) -> Data2 {
+    let my_date_option: Option<String> = row.get("my_date");
+    let my_date = my_date_option.unwrap_or_else(|| "missing_my_date".to_string());
+
+    let my_data_option: Option<String> = row.get("my_data");
+    let my_data = my_data_option.unwrap_or_else(|| "missing_my_data".to_string());
+
+    let my_struct = Data2 {
+        my_date,
+        my_data,
+    };
+    my_struct
+}
+
+pub async fn get_data_for_all_rows_for_table_2(rows: Vec<Row>) -> Vec<Data2> {
+    let mut structs:Vec<Data2> = Vec::new();
+    for row in rows {
+        let my_data = get_row_data_table_2(row).await;
+        structs.push(my_data);
+    }
+    structs
+}
+
+/* ************************************************************************************* */

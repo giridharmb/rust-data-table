@@ -46,6 +46,8 @@ mod data_types;
 use crate::data_types::{CustomError, CustomErrorType, Data1, Data2, ExportData, JsonResponseWithCSVExportData};
 use crate::data_types::{FormData, GenericError, JsonResponse, SearchStringData};
 use crate::db_ops::{export_table_to_csv, get_backend_table, get_backend_table_columns, get_count_of_records};
+use crate::db_ops::{get_data_for_all_rows_for_table_1};
+use crate::db_ops::{get_data_for_all_rows_for_table_2};
 use crate::db_ops::{get_count, get_db_pool_for_table, get_inner_query, get_table_column_mapping};
 use crate::string_ops::{remove_leading_and_trailing_spaces, sanitize_string, split_string};
 
@@ -231,45 +233,14 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
 
     match table_short_name.as_str() {
         "table1" => {
-            for row in rows {
-                let random_num = row.get("random_num");
-                let random_float = row.get("random_float");
-                let md5 = row.get("md5");
-
-                let my_struct = Data1 {
-                    random_num,
-                    random_float,
-                    md5,
-                };
-                structs_1.push(my_struct)
-            };
+            structs_1 = get_data_for_all_rows_for_table_1(rows).await;
         },
         "table2" => {
-            for row in rows {
-                let my_date = row.get("my_date");
-                let my_data = row.get("my_data");
-
-                let my_struct = Data2 {
-                    my_date,
-                    my_data,
-                };
-                structs_2.push(my_struct)
-            };
+            structs_2 = get_data_for_all_rows_for_table_2(rows).await;
         },
         _ => {
             // default is 'table1'
-            for row in rows {
-                let random_num = row.get("random_num");
-                let random_float = row.get("random_float");
-                let md5 = row.get("md5");
-
-                let my_struct = Data1 {
-                    random_num,
-                    random_float,
-                    md5,
-                };
-                structs_1.push(my_struct)
-            };
+            structs_1 = get_data_for_all_rows_for_table_1(rows).await;
         },
     };
 
