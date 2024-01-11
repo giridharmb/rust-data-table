@@ -46,9 +46,8 @@ mod data_types;
 use crate::data_types::{CustomError, CustomErrorType, Data1, Data2, ExportData, JsonResponseWithCSVExportData};
 use crate::data_types::{FormData, GenericError, JsonResponse, SearchStringData};
 use crate::db_ops::{export_table_to_csv, get_backend_table, get_backend_table_columns, get_count_of_records};
-use crate::db_ops::{get_data_for_all_rows_for_table_1};
-use crate::db_ops::{get_data_for_all_rows_for_table_2};
-use crate::db_ops::{get_count, get_db_pool_for_table, get_inner_query, get_table_column_mapping};
+use crate::db_ops::{fetch};
+use crate::db_ops::{get_db_pool_for_table, get_inner_query, get_table_column_mapping};
 use crate::string_ops::{remove_leading_and_trailing_spaces, sanitize_string, split_string};
 
 #[post("/echo")]
@@ -228,21 +227,50 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
 
     let rows = client.query(default_query.as_str(), &[]).await.map_err(|_| HttpResponse::BadRequest().finish()).unwrap();
 
-    let mut structs_1:Vec<Data1> = Vec::new();
-    let mut structs_2:Vec<Data2> = Vec::new();
+    let mut data_rows_1:Vec<Data1> = Vec::new();
+    let mut data_rows_2:Vec<Data2> = Vec::new();
 
     match table_short_name.as_str() {
         "table1" => {
-            structs_1 = get_data_for_all_rows_for_table_1(rows).await;
+            data_rows_1 = fetch(&client, default_query.as_str()).await.unwrap();
         },
         "table2" => {
-            structs_2 = get_data_for_all_rows_for_table_2(rows).await;
+            data_rows_2 = fetch(&client, default_query.as_str()).await.unwrap();
         },
         _ => {
             // default is 'table1'
-            structs_1 = get_data_for_all_rows_for_table_1(rows).await;
+            data_rows_1 = fetch(&client, default_query.as_str()).await.unwrap();
         },
     };
+
+    // let mut structs_1:Vec<Data1> = Vec::new();
+    // let mut structs_2:Vec<Data2> = Vec::new();
+    //
+    // match table_short_name.as_str() {
+    //     "table1" => {
+    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
+    //     },
+    //     "table2" => {
+    //         structs_2 = get_data_for_all_rows_for_table_2(rows).await;
+    //     },
+    //     _ => {
+    //         // default is 'table1'
+    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
+    //     },
+    // };
+    //
+    // match table_short_name.as_str() {
+    //     "table1" => {
+    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
+    //     },
+    //     "table2" => {
+    //         structs_2 = get_data_for_all_rows_for_table_2(rows).await;
+    //     },
+    //     _ => {
+    //         // default is 'table1'
+    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
+    //     },
+    // };
 
     let records_total = get_count_of_records(total_count_query, my_db_pool).await.unwrap();
     println!("records_total : {}", records_total);
@@ -251,7 +279,7 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
     match table_short_name.as_str() {
         "table1" => {
             let response = json!({
-                "data": structs_1,
+                "data": data_rows_1,
                 "draw": draw,
                 "recordsFiltered": records_filtered,
                 "recordsTotal": records_total,
@@ -260,7 +288,7 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
         },
         "table2" => {
             let response = json!({
-                "data": structs_2,
+                "data": data_rows_2,
                 "draw": draw,
                 "recordsFiltered": records_filtered,
                 "recordsTotal": records_total,
@@ -270,7 +298,7 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
         _ => {
             // default
             let response = json!({
-                "data": structs_1,
+                "data": data_rows_1,
                 "draw": draw,
                 "recordsFiltered": records_filtered,
                 "recordsTotal": records_total,

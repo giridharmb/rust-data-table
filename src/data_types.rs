@@ -13,6 +13,7 @@ pub struct TRandom {
     pub md5: String,
 }
 
+#[derive(sqlx::FromRow)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Data1 {
     // Define your data structure
@@ -21,6 +22,7 @@ pub struct Data1 {
     pub md5: String,
 }
 
+#[derive(sqlx::FromRow)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Data2 {
     // Define your data structure

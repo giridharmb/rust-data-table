@@ -7,7 +7,9 @@ use crate::data_types::{CustomError, Data1, Data2, ExportResults};
 use csv::Writer;
 use std::fs::File;
 use std::time::Instant;
+// use sqlx::FromRow;
 use uuid::Uuid;
+use async_trait::async_trait;
 
 pub async fn make_db_pool() -> Pool {
     dotenv().ok();
@@ -29,15 +31,6 @@ pub async fn get_table_columns(table_short_name: &str) -> Vec<String> {
         cols.push(column_name.to_string());
     }
     cols
-}
-
-
-pub async fn get_count(table_name: &str, pool: Pool) -> Result<i64, Error> {
-    let conn = pool.get().await.unwrap();
-    let sql_query = format!("select count(*) from {}", table_name);
-    let stmt = conn.prepare(sql_query.as_str()).await.unwrap();
-    let row = conn.query_one(&stmt, &[]).await.unwrap();
-    Ok(row.get(0))
 }
 
 pub async fn get_count_of_records(total_count_query: String, pool: Pool) -> Result<i64, Error> {
@@ -161,7 +154,30 @@ pub async fn export_table_to_csv(pool: Pool, table_name: &str, table_columns: Ve
     let headers: Vec<&str> = columns.iter().map(|col| col.name()).collect();
     wtr.write_record(&headers).unwrap();
 
-    write_csv_data(table_name, &rows, wtr).await;
+    ///////////////////
+
+    let mut data_rows_1:Vec<Data1> = Vec::new();
+    let mut data_rows_2:Vec<Data2> = Vec::new();
+
+    match table_name {
+        "table1" => {
+            data_rows_1 = fetch(&client, main_query.as_str()).await.unwrap();
+            write_to_csv(data_rows_1, complete_file_path.as_str(), wtr).await.unwrap();
+        },
+        "table2" => {
+            data_rows_2 = fetch(&client, main_query.as_str()).await.unwrap();
+            write_to_csv(data_rows_2, complete_file_path.as_str(), wtr).await.unwrap();
+        },
+        _ => {
+            // default is 'table1'
+            data_rows_1 = fetch(&client, main_query.as_str()).await.unwrap();
+            write_to_csv(data_rows_1, complete_file_path.as_str(), wtr).await.unwrap();
+        },
+    };
+
+    ///////////////////
+
+    // write_csv_data(table_name, &rows, wtr).await;
 
     println!("CSV File Written : {}", complete_file_path.clone().to_string());
 
@@ -176,6 +192,99 @@ pub async fn export_table_to_csv(pool: Pool, table_name: &str, table_columns: Ve
     };
 
     Ok(csv_export_results)
+}
+
+/* ************************************************************************************* */
+
+#[async_trait]
+pub trait FromRow: Sized {
+    async fn from_row(row: &tokio_postgres::Row) -> Result<Self, tokio_postgres::Error>
+    where Self: Sized;
+}
+
+#[async_trait]
+impl FromRow for Data1 {
+    async fn from_row(row: &tokio_postgres::Row) -> Result<Self, tokio_postgres::Error> {
+        let random_num = row.try_get("random_num").unwrap_or_else(|_| 0);
+        let random_float = row.try_get("random_float").unwrap_or_else(|_| 0.0);
+        let md5 = row.try_get("md5").unwrap_or_else(|_| "missing_md5".to_string());
+
+        // let random_num = row.get("random_num");
+        // let random_float = row.get("random_float");
+        // let md5 = row.get("md5");
+
+        Ok(Data1{
+            random_num,
+            random_float,
+            md5,
+        })
+    }
+}
+
+#[async_trait]
+impl FromRow for Data2 {
+    async fn from_row(row: &tokio_postgres::Row) -> Result<Self, tokio_postgres::Error> {
+        let my_date = row.try_get("my_date").unwrap_or_else(|_| "missing_my_date".to_string());
+        let my_data = row.try_get("my_data").unwrap_or_else(|_| "missing_my_data".to_string());
+
+        Ok(Data2{
+            my_date,
+            my_data,
+        })
+    }
+}
+
+/*
+Note the use of + Send in the generic type constraint.
+This is required because the async_trait macro transforms async trait methods into methods that return Send futures.
+*/
+
+pub async fn fetch<T: FromRow + Send>(client: &deadpool_postgres::Client, query: &str) -> Result<Vec<T>, tokio_postgres::Error> {
+    let rows = client.query(query, &[]).await?;
+    let mut results = Vec::new();
+
+    for row in rows {
+        results.push(T::from_row(&row).await?);
+    }
+
+    Ok(results)
+}
+
+/* ---- csv ---- */
+
+#[async_trait]
+pub trait ToCsvRow {
+    async fn to_csv_row(&self) -> Vec<String>;
+}
+
+#[async_trait]
+impl ToCsvRow for Data1 {
+    async fn to_csv_row(&self) -> Vec<String> {
+        vec![
+            self.random_num.to_string(),
+            self.random_float.to_string(),
+            self.md5.to_string(),
+        ]
+    }
+}
+
+#[async_trait]
+impl ToCsvRow for Data2 {
+    async fn to_csv_row(&self) -> Vec<String> {
+        vec![
+            self.my_date.to_string(),
+            self.my_data.to_string(),
+        ]
+    }
+}
+
+async fn write_to_csv<T: FromRow + Send + ToCsvRow>(items: Vec<T>, file_path: &str, mut wtr: Writer<File>) -> Result<(), Box<dyn std::error::Error>> {
+    // let mut wtr = Writer::from_path(file_path).unwrap();
+    for item in items {
+        wtr.write_record(item.to_csv_row().await).unwrap();
+    }
+    wtr.flush().unwrap();
+    Ok(())
 }
 
 /* ************************************************************************************* */
@@ -316,125 +425,6 @@ pub async fn get_inner_query(table_columns: Vec<String>, search_strings: Vec<Str
         return Err(CustomError::QueryError)
     }
     Ok(inner_query)
-}
-
-/* ************************************************************************************* */
-
-async fn write_csv_data(table_name: &str, rows: &Vec<Row>, mut wtr: Writer<File>) {
-    match table_name {
-        "table1" => {
-            // Iterate over the rows and write to the CSV
-            for row in rows {
-
-                // Note >>
-                // Here we are using Option<i32> or Option<String>
-                // Because row.get("column_name") -> can return (a valid value) or a (NULL)
-                // We need to handle both cases
-
-                let random_num_option: Option<i32> = row.get("random_num");
-                let random_num = random_num_option.unwrap_or_else(|| 0);
-
-                let random_float_option: Option<f64> = row.get("random_float");
-                let random_float = random_float_option.unwrap_or_else(|| 0.0);
-
-                let md5_option: Option<String> = row.get("md5");
-                let md5 = md5_option.unwrap_or_else(|| "missing_md5".to_string());
-
-                wtr.write_record(&[
-                    random_num.to_string(),
-                    random_float.to_string(),
-                    md5.to_string()
-                ]).unwrap();
-            }
-        },
-        "table2" => {
-            // Iterate over the rows and write to the CSV
-            for row in rows {
-                let my_date_option: Option<String> = row.get("my_date");
-                let my_date = my_date_option.unwrap_or_else(|| "missing_my_date".to_string());
-
-                let my_data_option: Option<String> = row.get("my_data");
-                let my_data = my_data_option.unwrap_or_else(|| "missing_my_data".to_string());
-
-                wtr.write_record(&[
-                    my_date.to_string(),
-                    my_data.to_string()
-                ]).unwrap();
-            }
-        },
-        _ => {
-            // default
-            for row in rows {
-                let random_num_option: Option<i32> = row.get("random_num");
-                let random_num = random_num_option.unwrap_or_else(|| 0);
-
-                let random_float_option: Option<f64> = row.get("random_float");
-                let random_float = random_float_option.unwrap_or_else(|| 0.0);
-
-                let md5_option: Option<String> = row.get("md5");
-                let md5 = md5_option.unwrap_or_else(|| "missing_md5".to_string());
-                wtr.write_record(&[
-                    random_num.to_string(),
-                    random_float.to_string(),
-                    md5.to_string()
-                ]).unwrap();
-            }
-        }
-    };
-
-    // Flush the writer to ensure all data is written to the file
-    wtr.flush().unwrap();
-}
-
-/* ************************************************************************************* */
-pub async fn get_row_data_table_1(row: Row) -> Data1 {
-    let random_num_option: Option<i32> = row.get("random_num");
-    let random_num = random_num_option.unwrap_or_else(|| 0);
-
-    let random_float_option: Option<f64> = row.get("random_float");
-    let random_float = random_float_option.unwrap_or_else(|| 0.0);
-
-    let md5_option: Option<String> = row.get("md5");
-    let md5 = md5_option.unwrap_or_else(|| "missing_md5".to_string());
-
-    let my_struct = Data1 {
-        random_num,
-        random_float,
-        md5,
-    };
-    my_struct
-}
-
-pub async fn get_data_for_all_rows_for_table_1(rows: Vec<Row>) -> Vec<Data1> {
-    let mut structs:Vec<Data1> = Vec::new();
-    for row in rows {
-        let my_data = get_row_data_table_1(row).await;
-        structs.push(my_data);
-    }
-    structs
-}
-
-pub async fn get_row_data_table_2(row: Row) -> Data2 {
-    let my_date_option: Option<String> = row.get("my_date");
-    let my_date = my_date_option.unwrap_or_else(|| "missing_my_date".to_string());
-
-    let my_data_option: Option<String> = row.get("my_data");
-    let my_data = my_data_option.unwrap_or_else(|| "missing_my_data".to_string());
-
-    let my_struct = Data2 {
-        my_date,
-        my_data,
-    };
-    my_struct
-}
-
-pub async fn get_data_for_all_rows_for_table_2(rows: Vec<Row>) -> Vec<Data2> {
-    let mut structs:Vec<Data2> = Vec::new();
-    for row in rows {
-        let my_data = get_row_data_table_2(row).await;
-        structs.push(my_data);
-    }
-    structs
 }
 
 /* ************************************************************************************* */
