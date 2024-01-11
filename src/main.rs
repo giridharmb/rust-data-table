@@ -242,7 +242,7 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
             data_rows_1 = fetch(&client, default_query.as_str()).await.unwrap();
         },
     };
-    
+
     let records_total = get_count_of_records(total_count_query, my_db_pool).await.unwrap();
     println!("records_total : {}", records_total);
     let records_filtered = records_total;
@@ -446,13 +446,7 @@ async fn handle_post(item: web::Json<ExportData>) -> impl Responder {
     println!("columns : {:#?}", columns);
 
     let my_db_pool = get_db_pool_for_table(item.table_name.as_str()).await.unwrap();
-
-    // if search_strings.len() == 0 {
-    //     if let Err(e) = export_table_to_csv(my_db_pool, "").await {
-    //         eprintln!("failed to export table : {:#?}", e);
-    //     };
-    // }
-
+    
     let my_table = item.table_name.as_str();
 
     let result = match export_table_to_csv(my_db_pool, my_table, columns, search_strings, item.pattern_match.to_string(), search_type).await {
