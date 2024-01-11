@@ -242,36 +242,7 @@ async fn query_data(form: web::Form<FormData>) -> impl Responder {
             data_rows_1 = fetch(&client, default_query.as_str()).await.unwrap();
         },
     };
-
-    // let mut structs_1:Vec<Data1> = Vec::new();
-    // let mut structs_2:Vec<Data2> = Vec::new();
-    //
-    // match table_short_name.as_str() {
-    //     "table1" => {
-    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
-    //     },
-    //     "table2" => {
-    //         structs_2 = get_data_for_all_rows_for_table_2(rows).await;
-    //     },
-    //     _ => {
-    //         // default is 'table1'
-    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
-    //     },
-    // };
-    //
-    // match table_short_name.as_str() {
-    //     "table1" => {
-    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
-    //     },
-    //     "table2" => {
-    //         structs_2 = get_data_for_all_rows_for_table_2(rows).await;
-    //     },
-    //     _ => {
-    //         // default is 'table1'
-    //         structs_1 = get_data_for_all_rows_for_table_1(rows).await;
-    //     },
-    // };
-
+    
     let records_total = get_count_of_records(total_count_query, my_db_pool).await.unwrap();
     println!("records_total : {}", records_total);
     let records_filtered = records_total;
